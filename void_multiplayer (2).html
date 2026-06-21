@@ -1,0 +1,1525 @@
+
+html_content = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VOID - Multiplayer Space Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+        }
+
+        body {
+            background: #050508;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #gameCanvas {
+            border: 2px solid #1a1a2e;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(100, 50, 255, 0.2);
+            touch-action: none;
+        }
+
+        .menu-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 15, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .menu-container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(20, 20, 40, 0.9);
+            border-radius: 16px;
+            border: 1px solid rgba(100, 100, 200, 0.3);
+            box-shadow: 0 0 40px rgba(100, 50, 255, 0.15);
+            min-width: 320px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .game-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+            letter-spacing: 8px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+
+        .menu-btn {
+            display: block;
+            width: 100%;
+            padding: 15px 30px;
+            margin: 10px 0;
+            background: rgba(100, 50, 255, 0.2);
+            border: 1px solid rgba(100, 50, 255, 0.4);
+            color: #fff;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 1px;
+            touch-action: manipulation;
+        }
+
+        .menu-btn:hover, .menu-btn:active {
+            background: rgba(100, 50, 255, 0.4);
+            box-shadow: 0 0 20px rgba(100, 50, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .menu-btn.primary {
+            background: rgba(100, 50, 255, 0.3);
+            border-color: rgba(100, 50, 255, 0.6);
+        }
+
+        .input-group {
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(100, 100, 200, 0.3);
+            color: #fff;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            border-color: rgba(100, 50, 255, 0.6);
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 15px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(100, 100, 200, 0.2);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .hud-item {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .hud-label {
+            color: #888;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .score-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .leaderboard {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(100, 100, 200, 0.2);
+            min-width: 180px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .leaderboard-title {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 13px;
+        }
+
+        .leaderboard-entry.you {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .notification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 200;
+            background: rgba(20, 20, 40, 0.95);
+            padding: 30px 50px;
+            border-radius: 16px;
+            border: 1px solid rgba(100, 50, 255, 0.4);
+            text-align: center;
+            box-shadow: 0 0 50px rgba(100, 50, 255, 0.3);
+            max-width: 90vw;
+        }
+
+        .notification h2 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .notification.winner h2 {
+            color: #ffd700;
+        }
+
+        .notification.loser h2 {
+            color: #ff4444;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            touch-action: manipulation;
+        }
+
+        .color-option.selected {
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            transform: scale(1.2);
+        }
+
+        .server-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+
+        .server-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            touch-action: manipulation;
+        }
+
+        .server-item:hover, .server-item:active {
+            background: rgba(100, 50, 255, 0.2);
+        }
+
+        .server-name {
+            font-weight: bold;
+        }
+
+        .server-info {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .warning-text {
+            color: #ff6666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .instructions {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .instructions h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .instructions ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .instructions li {
+            padding: 3px 0;
+            color: #ccc;
+        }
+
+        .instructions li::before {
+            content: "▸ ";
+            color: #667eea;
+        }
+
+        /* ===== JOYSTICK STYLES ===== */
+        .joystick-container {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 140px;
+            height: 140px;
+            z-index: 60;
+            pointer-events: none;
+            display: none;
+        }
+
+        .joystick-container.active {
+            display: block;
+        }
+
+        .joystick-base {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(100, 50, 255, 0.15);
+            border: 2px solid rgba(100, 50, 255, 0.3);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            pointer-events: auto;
+            touch-action: none;
+            left: 10px;
+            top: 10px;
+        }
+
+        .joystick-stick {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(100, 50, 255, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(100, 50, 255, 0.4);
+            pointer-events: none;
+            left: 45px;
+            top: 45px;
+            transition: transform 0.05s ease-out;
+        }
+
+        .joystick-stick.active {
+            background: rgba(100, 50, 255, 0.9);
+            box-shadow: 0 0 25px rgba(100, 50, 255, 0.6);
+        }
+
+        /* Mobile HUD adjustments */
+        @media (max-width: 768px) {
+            .hud {
+                padding: 8px 12px;
+                top: 5px;
+                left: 5px;
+                font-size: 12px;
+            }
+            .hud-item {
+                font-size: 12px;
+            }
+            .score-display {
+                font-size: 18px;
+            }
+            .leaderboard {
+                min-width: 140px;
+                padding: 8px 12px;
+                top: 5px;
+                right: 5px;
+            }
+            .leaderboard-title {
+                font-size: 10px;
+            }
+            .leaderboard-entry {
+                font-size: 11px;
+            }
+            .game-title {
+                font-size: 36px;
+                letter-spacing: 4px;
+            }
+            .menu-container {
+                padding: 25px;
+                min-width: 280px;
+            }
+            .joystick-container {
+                bottom: 20px;
+                left: 20px;
+                width: 120px;
+                height: 120px;
+            }
+            .joystick-base {
+                width: 100px;
+                height: 100px;
+                left: 10px;
+                top: 10px;
+            }
+            .joystick-stick {
+                width: 42px;
+                height: 42px;
+                left: 39px;
+                top: 39px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .joystick-container {
+                bottom: 15px;
+                left: 15px;
+                width: 100px;
+                height: 100px;
+            }
+            .joystick-base {
+                width: 85px;
+                height: 85px;
+                left: 7px;
+                top: 7px;
+            }
+            .joystick-stick {
+                width: 36px;
+                height: 36px;
+                left: 31px;
+                top: 31px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- HUD -->
+    <div id="hud" class="hud hidden">
+        <div class="hud-item">
+            <div class="hud-label">Score</div>
+            <div class="score-display" id="scoreDisplay">0 / 35</div>
+        </div>
+        <div class="hud-item">
+            <div class="hud-label">Player</div>
+            <div id="playerName">You</div>
+        </div>
+        <div class="hud-item">
+            <div class="hud-label">Mode</div>
+            <div id="gameMode">Multiplayer</div>
+        </div>
+    </div>
+
+    <div id="leaderboard" class="leaderboard hidden">
+        <div class="leaderboard-title">Leaderboard</div>
+        <div id="leaderboardList"></div>
+    </div>
+
+    <!-- Joystick (Mobile) -->
+    <div id="joystick" class="joystick-container">
+        <div class="joystick-base" id="joystickBase"></div>
+        <div class="joystick-stick" id="joystickStick"></div>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="mainMenu" class="menu-overlay">
+        <div class="menu-container">
+            <h1 class="game-title">VOID</h1>
+            <p class="subtitle">SURVIVE THE ABYSS</p>
+            <button class="menu-btn primary" onclick="showMenu('createServer')">Create Server</button>
+            <button class="menu-btn" onclick="showMenu('joinServer')">Join Server</button>
+            <button class="menu-btn" onclick="showMenu('playBots')">Play with Bots</button>
+            <div class="instructions">
+                <h3>How to Play</h3>
+                <ul>
+                    <li>Desktop: WASD or Arrow Keys to move</li>
+                    <li>Mobile: Use the on-screen joystick</li>
+                    <li>Collect 35 stars to win</li>
+                    <li>Avoid black holes - they pull you in!</li>
+                    <li>Black holes grow over time</li>
+                    <li>Respawn if you get sucked in</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Server Menu -->
+    <div id="createServerMenu" class="menu-overlay hidden">
+        <div class="menu-container">
+            <h2 style="margin-bottom: 20px; color: #667eea;">Create Server</h2>
+            <div class="input-group">
+                <label>Your Name</label>
+                <input type="text" id="createPlayerName" placeholder="Enter your name" maxlength="15">
+            </div>
+            <div class="input-group">
+                <label>Server Name</label>
+                <input type="text" id="serverName" placeholder="My Server" maxlength="20">
+            </div>
+            <div class="input-group">
+                <label>Max Players</label>
+                <select id="maxPlayers">
+                    <option value="4">4 Players</option>
+                    <option value="6">6 Players</option>
+                    <option value="8">8 Players</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Your Color</label>
+                <div class="color-picker" id="createColorPicker"></div>
+            </div>
+            <button class="menu-btn primary" onclick="createServer()">Create & Start</button>
+            <button class="menu-btn back-btn" onclick="showMenu('main')">Back</button>
+        </div>
+    </div>
+
+    <!-- Join Server Menu -->
+    <div id="joinServerMenu" class="menu-overlay hidden">
+        <div class="menu-container">
+            <h2 style="margin-bottom: 20px; color: #667eea;">Join Server</h2>
+            <div class="input-group">
+                <label>Your Name</label>
+                <input type="text" id="joinPlayerName" placeholder="Enter your name" maxlength="15">
+            </div>
+            <div class="input-group">
+                <label>Your Color</label>
+                <div class="color-picker" id="joinColorPicker"></div>
+            </div>
+            <div class="input-group">
+                <label>Available Servers</label>
+                <div class="server-list" id="serverList">
+                    <div class="server-item" onclick="joinServer('server1')">
+                        <div>
+                            <div class="server-name">Galaxy Arena</div>
+                            <div class="server-info">3/4 players • Normal</div>
+                        </div>
+                        <span style="color: #4ade80;">●</span>
+                    </div>
+                    <div class="server-item" onclick="joinServer('server2')">
+                        <div>
+                            <div class="server-name">Void Masters</div>
+                            <div class="server-info">5/8 players • Hard</div>
+                        </div>
+                        <span style="color: #4ade80;">●</span>
+                    </div>
+                    <div class="server-item" onclick="joinServer('server3')">
+                        <div>
+                            <div class="server-name">Star Hunters</div>
+                            <div class="server-info">2/4 players • Easy</div>
+                        </div>
+                        <span style="color: #fbbf24;">●</span>
+                    </div>
+                </div>
+            </div>
+            <button class="menu-btn back-btn" onclick="showMenu('main')">Back</button>
+        </div>
+    </div>
+
+    <!-- Bot Game Menu -->
+    <div id="botGameMenu" class="menu-overlay hidden">
+        <div class="menu-container">
+            <h2 style="margin-bottom: 20px; color: #667eea;">Play with Bots</h2>
+            <div class="input-group">
+                <label>Your Name</label>
+                <input type="text" id="botPlayerName" placeholder="Enter your name" maxlength="15">
+            </div>
+            <div class="input-group">
+                <label>Number of Bots</label>
+                <select id="botCount">
+                    <option value="1">1 Bot</option>
+                    <option value="2">2 Bots</option>
+                    <option value="3" selected>3 Bots</option>
+                    <option value="5">5 Bots</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Bot Difficulty</label>
+                <select id="botDifficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Your Color</label>
+                <div class="color-picker" id="botColorPicker"></div>
+            </div>
+            <button class="menu-btn primary" onclick="startBotGame()">Start Game</button>
+            <button class="menu-btn back-btn" onclick="showMenu('main')">Back</button>
+        </div>
+    </div>
+
+    <!-- Game Over Notification -->
+    <div id="gameOver" class="menu-overlay hidden">
+        <div class="notification" id="gameOverContent">
+            <h2 id="gameOverTitle">Game Over</h2>
+            <p id="gameOverMessage"></p>
+            <div id="finalScores" style="margin: 20px 0; text-align: left;"></div>
+            <button class="menu-btn primary" onclick="returnToMenu()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GAME ENGINE ====================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            const maxWidth = window.innerWidth - 20;
+            const maxHeight = window.innerHeight - 20;
+            canvas.width = Math.min(maxWidth, 1200);
+            canvas.height = Math.min(maxHeight, 800);
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Detect mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+        // Game constants
+        const WIN_SCORE = 35;
+        const PLAYER_SPEED = 4;
+        const PLAYER_RADIUS = 12;
+        const STAR_RADIUS = 6;
+        const BLACK_HOLE_BASE_RADIUS = 30;
+        const BLACK_HOLE_GROWTH_RATE = 0.5;
+        const BLACK_HOLE_PULL_RADIUS = 150;
+        const BLACK_HOLE_PULL_STRENGTH = 0.15;
+        const RESPAWN_TIME = 2000;
+        const STAR_SPAWN_INTERVAL = 1500;
+        const BLACK_HOLE_SPAWN_INTERVAL = 8000;
+
+        // Colors
+        const PLAYER_COLORS = [
+            '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', 
+            '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'
+        ];
+
+        // Game state
+        let gameState = 'menu';
+        let gameMode = 'multiplayer';
+        let players = [];
+        let stars = [];
+        let blackHoles = [];
+        let particles = [];
+        let localPlayer = null;
+        let keys = {};
+        let camera = { x: 0, y: 0 };
+        let worldSize = { width: 2000, height: 2000 };
+        let gameTime = 0;
+        let lastTime = 0;
+        let starSpawnTimer = 0;
+        let blackHoleSpawnTimer = 0;
+        let animationId = null;
+
+        // Joystick state
+        let joystick = {
+            active: false,
+            baseX: 0,
+            baseY: 0,
+            stickX: 0,
+            stickY: 0,
+            dx: 0,
+            dy: 0,
+            maxDistance: 40
+        };
+
+        // ==================== JOYSTICK SYSTEM ====================
+        const joystickEl = document.getElementById('joystick');
+        const joystickBase = document.getElementById('joystickBase');
+        const joystickStick = document.getElementById('joystickStick');
+
+        function initJoystick() {
+            const base = joystickBase;
+            const stick = joystickStick;
+            const container = joystickEl;
+
+            function getTouchPos(e) {
+                const touch = e.touches[0] || e.changedTouches[0];
+                const rect = base.getBoundingClientRect();
+                return {
+                    x: touch.clientX - rect.left - rect.width / 2,
+                    y: touch.clientY - rect.top - rect.height / 2
+                };
+            }
+
+            function updateJoystick(pos) {
+                const maxDist = joystick.maxDistance;
+                const dist = Math.sqrt(pos.x * pos.x + pos.y * pos.y);
+                const angle = Math.atan2(pos.y, pos.x);
+                
+                const clampedDist = Math.min(dist, maxDist);
+                const clampedX = Math.cos(angle) * clampedDist;
+                const clampedY = Math.sin(angle) * clampedDist;
+                
+                stick.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
+                
+                // Normalize output (-1 to 1)
+                joystick.dx = clampedX / maxDist;
+                joystick.dy = clampedY / maxDist;
+                joystick.active = true;
+                
+                stick.classList.add('active');
+            }
+
+            function resetJoystick() {
+                stick.style.transform = 'translate(0px, 0px)';
+                joystick.dx = 0;
+                joystick.dy = 0;
+                joystick.active = false;
+                stick.classList.remove('active');
+            }
+
+            base.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const pos = getTouchPos(e);
+                updateJoystick(pos);
+            }, { passive: false });
+
+            base.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const pos = getTouchPos(e);
+                updateJoystick(pos);
+            }, { passive: false });
+
+            base.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                resetJoystick();
+            }, { passive: false });
+
+            base.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                resetJoystick();
+            }, { passive: false });
+        }
+
+        initJoystick();
+
+        // Input handling (keyboard)
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(e.key.toLowerCase())) {
+                e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        // ==================== MENU SYSTEM ====================
+        function showMenu(menu) {
+            document.querySelectorAll('.menu-overlay').forEach(el => el.classList.add('hidden'));
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('leaderboard').classList.add('hidden');
+            joystickEl.classList.remove('active');
+            
+            if (menu === 'main') {
+                document.getElementById('mainMenu').classList.remove('hidden');
+                stopGame();
+            } else if (menu === 'createServer') {
+                document.getElementById('createServerMenu').classList.remove('hidden');
+                initColorPicker('createColorPicker');
+            } else if (menu === 'joinServer') {
+                document.getElementById('joinServerMenu').classList.remove('hidden');
+                initColorPicker('joinColorPicker');
+            } else if (menu === 'playBots') {
+                document.getElementById('botGameMenu').classList.remove('hidden');
+                initColorPicker('botColorPicker');
+            }
+        }
+
+        function initColorPicker(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            PLAYER_COLORS.forEach((color, index) => {
+                const div = document.createElement('div');
+                div.className = 'color-option' + (index === 0 ? ' selected' : '');
+                div.style.backgroundColor = color;
+                div.onclick = () => {
+                    container.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                };
+                container.appendChild(div);
+            });
+        }
+
+        function getSelectedColor(containerId) {
+            const container = document.getElementById(containerId);
+            const selected = container.querySelector('.selected');
+            return selected ? selected.style.backgroundColor : PLAYER_COLORS[0];
+        }
+
+        // ==================== SERVER SYSTEM (Simulated) ====================
+        let servers = [
+            { id: 'server1', name: 'Galaxy Arena', players: 3, maxPlayers: 4, difficulty: 'normal' },
+            { id: 'server2', name: 'Void Masters', players: 5, maxPlayers: 8, difficulty: 'hard' },
+            { id: 'server3', name: 'Star Hunters', players: 2, maxPlayers: 4, difficulty: 'easy' }
+        ];
+
+        function createServer() {
+            const name = document.getElementById('createPlayerName').value || 'Player';
+            const serverName = document.getElementById('serverName').value || 'My Server';
+            const maxPlayers = parseInt(document.getElementById('maxPlayers').value);
+            const color = getSelectedColor('createColorPicker');
+            
+            const serverId = 'server_' + Date.now();
+            servers.push({
+                id: serverId,
+                name: serverName,
+                players: 1,
+                maxPlayers: maxPlayers,
+                difficulty: 'normal'
+            });
+            
+            startGame('multiplayer', name, color, maxPlayers);
+        }
+
+        function joinServer(serverId) {
+            const name = document.getElementById('joinPlayerName').value || 'Player';
+            const color = getSelectedColor('joinColorPicker');
+            const server = servers.find(s => s.id === serverId);
+            
+            if (server && server.players < server.maxPlayers) {
+                server.players++;
+                startGame('multiplayer', name, color, server.maxPlayers);
+            }
+        }
+
+        function startBotGame() {
+            const name = document.getElementById('botPlayerName').value || 'Player';
+            const botCount = parseInt(document.getElementById('botCount').value);
+            const difficulty = document.getElementById('botDifficulty').value;
+            const color = getSelectedColor('botColorPicker');
+            
+            startGame('bots', name, color, botCount + 1, { botCount, difficulty });
+        }
+
+        // ==================== GAME INITIALIZATION ====================
+        function startGame(mode, playerName, playerColor, maxPlayers, botOptions = null) {
+            gameMode = mode;
+            gameState = 'playing';
+            gameTime = 0;
+            
+            // Show joystick on mobile
+            if (isMobile) {
+                joystickEl.classList.add('active');
+            }
+            
+            // Hide menus
+            document.querySelectorAll('.menu-overlay').forEach(el => el.classList.add('hidden'));
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('leaderboard').classList.remove('hidden');
+            document.getElementById('gameMode').textContent = mode === 'bots' ? 'vs Bots' : 'Multiplayer';
+            
+            // Initialize players
+            players = [];
+            
+            // Create local player
+            localPlayer = {
+                id: 'local',
+                name: playerName,
+                color: playerColor,
+                x: worldSize.width / 2 + (Math.random() - 0.5) * 200,
+                y: worldSize.height / 2 + (Math.random() - 0.5) * 200,
+                vx: 0,
+                vy: 0,
+                score: 0,
+                alive: true,
+                respawnTimer: 0,
+                isBot: false,
+                trail: []
+            };
+            players.push(localPlayer);
+            
+            // Create other players (simulated multiplayer) or bots
+            if (mode === 'multiplayer') {
+                const botNames = ['Nova', 'Stellar', 'Cosmo', 'Astro', 'Nebula', 'Quasar', 'Pulsar', 'Vortex'];
+                const otherCount = Math.min(3, maxPlayers - 1);
+                for (let i = 0; i < otherCount; i++) {
+                    const botColor = PLAYER_COLORS[(PLAYER_COLORS.indexOf(playerColor) + i + 1) % PLAYER_COLORS.length];
+                    players.push(createBot(botNames[i], botColor, 'medium'));
+                }
+            } else {
+                const botNames = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta'];
+                const difficulty = botOptions.difficulty;
+                for (let i = 0; i < botOptions.botCount; i++) {
+                    const botColor = PLAYER_COLORS[(PLAYER_COLORS.indexOf(playerColor) + i + 1) % PLAYER_COLORS.length];
+                    players.push(createBot(botNames[i], botColor, difficulty));
+                }
+            }
+            
+            // Initialize game objects
+            stars = [];
+            blackHoles = [];
+            particles = [];
+            
+            // Spawn initial stars
+            for (let i = 0; i < 15; i++) {
+                spawnStar();
+            }
+            
+            // Start game loop
+            lastTime = performance.now();
+            if (animationId) cancelAnimationFrame(animationId);
+            gameLoop();
+        }
+
+        function createBot(name, color, difficulty) {
+            const speeds = { easy: 2.5, medium: 3.5, hard: 4.5 };
+            const awareness = { easy: 100, medium: 200, hard: 300 };
+            
+            return {
+                id: 'bot_' + Math.random().toString(36).substr(2, 9),
+                name: name,
+                color: color,
+                x: Math.random() * worldSize.width,
+                y: Math.random() * worldSize.height,
+                vx: 0,
+                vy: 0,
+                score: 0,
+                alive: true,
+                respawnTimer: 0,
+                isBot: true,
+                botDifficulty: difficulty,
+                botSpeed: speeds[difficulty],
+                botAwareness: awareness[difficulty],
+                trail: [],
+                targetStar: null,
+                wanderTimer: 0,
+                wanderX: 0,
+                wanderY: 0
+            };
+        }
+
+        function stopGame() {
+            gameState = 'menu';
+            if (animationId) cancelAnimationFrame(animationId);
+            joystickEl.classList.remove('active');
+        }
+
+        function returnToMenu() {
+            document.getElementById('gameOver').classList.add('hidden');
+            showMenu('main');
+        }
+
+        // ==================== GAME OBJECTS ====================
+        function spawnStar() {
+            const margin = 50;
+            stars.push({
+                x: margin + Math.random() * (worldSize.width - margin * 2),
+                y: margin + Math.random() * (worldSize.height - margin * 2),
+                radius: STAR_RADIUS,
+                pulse: Math.random() * Math.PI * 2,
+                color: `hsl(${Math.random() * 60 + 40}, 100%, 70%)`
+            });
+        }
+
+        function spawnBlackHole() {
+            const margin = 100;
+            blackHoles.push({
+                x: margin + Math.random() * (worldSize.width - margin * 2),
+                y: margin + Math.random() * (worldSize.height - margin * 2),
+                radius: BLACK_HOLE_BASE_RADIUS,
+                pullRadius: BLACK_HOLE_PULL_RADIUS,
+                growthRate: BLACK_HOLE_GROWTH_RATE,
+                angle: 0,
+                spawnTime: gameTime
+            });
+        }
+
+        function createParticles(x, y, color, count = 10) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 3;
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1,
+                    decay: 0.02 + Math.random() * 0.03,
+                    color: color,
+                    size: 2 + Math.random() * 3
+                });
+            }
+        }
+
+        // ==================== GAME LOGIC ====================
+        function update(dt) {
+            gameTime += dt;
+            
+            // Spawn stars
+            starSpawnTimer += dt;
+            if (starSpawnTimer > STAR_SPAWN_INTERVAL) {
+                starSpawnTimer = 0;
+                if (stars.length < 25) spawnStar();
+            }
+            
+            // Spawn black holes
+            blackHoleSpawnTimer += dt;
+            if (blackHoleSpawnTimer > BLACK_HOLE_SPAWN_INTERVAL) {
+                blackHoleSpawnTimer = 0;
+                if (blackHoles.length < 5) spawnBlackHole();
+            }
+            
+            // Update black holes
+            blackHoles.forEach(bh => {
+                bh.angle += dt * 0.001;
+                bh.radius += bh.growthRate * dt * 0.001;
+                bh.pullRadius += bh.growthRate * 2 * dt * 0.001;
+            });
+            
+            // Update players
+            players.forEach(player => {
+                if (!player.alive) {
+                    player.respawnTimer -= dt;
+                    if (player.respawnTimer <= 0) {
+                        player.alive = true;
+                        player.x = Math.random() * worldSize.width;
+                        player.y = Math.random() * worldSize.height;
+                        player.vx = 0;
+                        player.vy = 0;
+                    }
+                    return;
+                }
+                
+                if (player.isBot) {
+                    updateBot(player, dt);
+                } else {
+                    updateLocalPlayer(player, dt);
+                }
+                
+                // Apply physics
+                player.x += player.vx * dt * 0.06;
+                player.y += player.vy * dt * 0.06;
+                
+                // Friction
+                player.vx *= 0.95;
+                player.vy *= 0.95;
+                
+                // World bounds
+                player.x = Math.max(PLAYER_RADIUS, Math.min(worldSize.width - PLAYER_RADIUS, player.x));
+                player.y = Math.max(PLAYER_RADIUS, Math.min(worldSize.height - PLAYER_RADIUS, player.y));
+                
+                // Trail
+                player.trail.push({ x: player.x, y: player.y, time: gameTime });
+                player.trail = player.trail.filter(t => gameTime - t.time < 500);
+                
+                // Check star collection
+                for (let i = stars.length - 1; i >= 0; i--) {
+                    const star = stars[i];
+                    const dx = player.x - star.x;
+                    const dy = player.y - star.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < PLAYER_RADIUS + star.radius + 5) {
+                        player.score++;
+                        createParticles(star.x, star.y, star.color, 8);
+                        stars.splice(i, 1);
+                        
+                        // Check win condition
+                        if (player.score >= WIN_SCORE) {
+                            endGame(player);
+                        }
+                    }
+                }
+                
+                // Check black hole pull
+                blackHoles.forEach(bh => {
+                    const dx = player.x - bh.x;
+                    const dy = player.y - bh.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < bh.pullRadius) {
+                        const pullStrength = BLACK_HOLE_PULL_STRENGTH * (1 - dist / bh.pullRadius);
+                        player.vx -= (dx / dist) * pullStrength * dt;
+                        player.vy -= (dy / dist) * pullStrength * dt;
+                    }
+                    
+                    // Check if consumed
+                    if (dist < bh.radius + PLAYER_RADIUS) {
+                        player.alive = false;
+                        player.respawnTimer = RESPAWN_TIME;
+                        createParticles(player.x, player.y, player.color, 20);
+                        
+                        // Penalty: lose some score
+                        player.score = Math.max(0, player.score - 3);
+                    }
+                });
+            });
+            
+            // Update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= p.decay;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+            
+            // Update HUD
+            document.getElementById('scoreDisplay').textContent = `${localPlayer.score} / ${WIN_SCORE}`;
+            document.getElementById('playerName').textContent = localPlayer.name;
+            
+            // Update leaderboard
+            updateLeaderboard();
+            
+            // Update camera to follow local player
+            if (localPlayer.alive) {
+                camera.x = localPlayer.x - canvas.width / 2;
+                camera.y = localPlayer.y - canvas.height / 2;
+            }
+            camera.x = Math.max(0, Math.min(worldSize.width - canvas.width, camera.x));
+            camera.y = Math.max(0, Math.min(worldSize.height - canvas.height, camera.y));
+        }
+
+        function updateLocalPlayer(player, dt) {
+            let dx = 0, dy = 0;
+            
+            // Keyboard input
+            if (keys['w'] || keys['arrowup']) dy -= 1;
+            if (keys['s'] || keys['arrowdown']) dy += 1;
+            if (keys['a'] || keys['arrowleft']) dx -= 1;
+            if (keys['d'] || keys['arrowright']) dx += 1;
+            
+            // Joystick input (mobile)
+            if (joystick.active) {
+                dx = joystick.dx;
+                dy = joystick.dy;
+            }
+            
+            if (dx !== 0 || dy !== 0) {
+                const len = Math.sqrt(dx * dx + dy * dy);
+                if (len > 0) {
+                    dx /= len;
+                    dy /= len;
+                }
+                player.vx += dx * PLAYER_SPEED * dt * 0.1;
+                player.vy += dy * PLAYER_SPEED * dt * 0.1;
+            }
+        }
+
+        function updateBot(bot, dt) {
+            let targetX = bot.x;
+            let targetY = bot.y;
+            let avoidX = 0, avoidY = 0;
+            
+            // Find nearest star
+            let nearestStar = null;
+            let nearestStarDist = Infinity;
+            
+            stars.forEach(star => {
+                const dx = star.x - bot.x;
+                const dy = star.y - bot.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < nearestStarDist && dist < bot.botAwareness * 2) {
+                    nearestStarDist = dist;
+                    nearestStar = star;
+                }
+            });
+            
+            // Avoid black holes
+            blackHoles.forEach(bh => {
+                const dx = bot.x - bh.x;
+                const dy = bot.y - bh.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < bh.pullRadius * 1.5) {
+                    const avoidStrength = 3 * (1 - dist / (bh.pullRadius * 1.5));
+                    avoidX += (dx / dist) * avoidStrength;
+                    avoidY += (dy / dist) * avoidStrength;
+                }
+            });
+            
+            // Avoid other players (optional for harder bots)
+            if (bot.botDifficulty === 'hard') {
+                players.forEach(other => {
+                    if (other.id !== bot.id && other.alive) {
+                        const dx = bot.x - other.x;
+                        const dy = bot.y - other.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 100) {
+                            avoidX += (dx / dist) * 1;
+                            avoidY += (dy / dist) * 1;
+                        }
+                    }
+                });
+            }
+            
+            // Determine target
+            if (nearestStar && nearestStarDist < bot.botAwareness * 2) {
+                targetX = nearestStar.x;
+                targetY = nearestStar.y;
+            } else {
+                // Wander
+                bot.wanderTimer -= dt;
+                if (bot.wanderTimer <= 0) {
+                    bot.wanderTimer = 2000 + Math.random() * 3000;
+                    bot.wanderX = Math.random() * worldSize.width;
+                    bot.wanderY = Math.random() * worldSize.height;
+                }
+                targetX = bot.wanderX;
+                targetY = bot.wanderY;
+            }
+            
+            // Move towards target
+            let dx = targetX - bot.x + avoidX * 50;
+            let dy = targetY - bot.y + avoidY * 50;
+            const len = Math.sqrt(dx * dx + dy * dy);
+            
+            if (len > 0) {
+                dx /= len;
+                dy /= len;
+                bot.vx += dx * bot.botSpeed * dt * 0.1;
+                bot.vy += dy * bot.botSpeed * dt * 0.1;
+            }
+        }
+
+        function endGame(winner) {
+            gameState = 'gameover';
+            joystickEl.classList.remove('active');
+            
+            const isWinner = winner.id === localPlayer.id;
+            const notification = document.getElementById('gameOverContent');
+            const title = document.getElementById('gameOverTitle');
+            const message = document.getElementById('gameOverMessage');
+            const scoresDiv = document.getElementById('finalScores');
+            
+            notification.className = 'notification ' + (isWinner ? 'winner' : 'loser');
+            title.textContent = isWinner ? 'VICTORY!' : 'DEFEAT';
+            message.textContent = isWinner 
+                ? `You collected ${winner.score} stars and won the game!` 
+                : `${winner.name} collected ${winner.score} stars and won the game!`;
+            
+            // Show final scores
+            const sorted = [...players].sort((a, b) => b.score - a.score);
+            scoresDiv.innerHTML = '<h3 style="color: #667eea; margin-bottom: 10px;">Final Standings</h3>' +
+                sorted.map((p, i) => `
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0; ${p.id === localPlayer.id ? 'color: #ffd700; font-weight: bold;' : ''}">
+                        <span>${i + 1}. ${p.name} ${p.id === localPlayer.id ? '(You)' : ''}</span>
+                        <span>${p.score} stars</span>
+                    </div>
+                `).join('');
+            
+            document.getElementById('gameOver').classList.remove('hidden');
+        }
+
+        function updateLeaderboard() {
+            const sorted = [...players].sort((a, b) => b.score - a.score);
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = sorted.map(p => `
+                <div class="leaderboard-entry ${p.id === localPlayer.id ? 'you' : ''}">
+                    <span>${p.name} ${p.alive ? '' : '💀'}</span>
+                    <span>${p.score}</span>
+                </div>
+            `).join('');
+        }
+
+        // ==================== RENDERING ====================
+        function render() {
+            // Clear canvas
+            ctx.fillStyle = '#050508';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            ctx.strokeStyle = 'rgba(100, 100, 200, 0.05)';
+            ctx.lineWidth = 1;
+            const gridSize = 50;
+            const offsetX = -camera.x % gridSize;
+            const offsetY = -camera.y % gridSize;
+            
+            for (let x = offsetX; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = offsetY; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            ctx.save();
+            ctx.translate(-camera.x, -camera.y);
+            
+            // Draw world border
+            ctx.strokeStyle = 'rgba(100, 50, 255, 0.3)';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(0, 0, worldSize.width, worldSize.height);
+            
+            // Draw particles
+            particles.forEach(p => {
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+            
+            // Draw stars
+            stars.forEach(star => {
+                const pulse = Math.sin(gameTime * 0.003 + star.pulse) * 0.3 + 1;
+                
+                // Glow
+                ctx.shadowColor = star.color;
+                ctx.shadowBlur = 15 * pulse;
+                
+                ctx.fillStyle = star.color;
+                ctx.beginPath();
+                
+                // Draw star shape
+                const spikes = 5;
+                const outerRadius = star.radius * pulse;
+                const innerRadius = star.radius * 0.5 * pulse;
+                
+                for (let i = 0; i < spikes * 2; i++) {
+                    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                    const angle = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
+                    const x = star.x + Math.cos(angle) * radius;
+                    const y = star.y + Math.sin(angle) * radius;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
+            });
+            
+            // Draw black holes
+            blackHoles.forEach(bh => {
+                // Pull radius indicator
+                ctx.strokeStyle = 'rgba(100, 0, 200, 0.1)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(bh.x, bh.y, bh.pullRadius, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Accretion disk
+                const gradient = ctx.createRadialGradient(bh.x, bh.y, 0, bh.x, bh.y, bh.radius * 2);
+                gradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
+                gradient.addColorStop(0.3, 'rgba(50, 0, 100, 0.8)');
+                gradient.addColorStop(0.6, 'rgba(100, 0, 200, 0.4)');
+                gradient.addColorStop(1, 'rgba(100, 0, 200, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(bh.x, bh.y, bh.radius * 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Event horizon
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(bh.x, bh.y, bh.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Swirling effect
+                ctx.strokeStyle = 'rgba(150, 50, 255, 0.6)';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    const startAngle = bh.angle + (i * Math.PI * 2 / 3);
+                    ctx.arc(bh.x, bh.y, bh.radius * 0.7, startAngle, startAngle + Math.PI * 1.5);
+                    ctx.stroke();
+                }
+            });
+            
+            // Draw players
+            players.forEach(player => {
+                if (!player.alive) return;
+                
+                // Trail
+                if (player.trail.length > 1) {
+                    ctx.strokeStyle = player.color;
+                    ctx.lineWidth = 3;
+                    ctx.lineCap = 'round';
+                    ctx.globalAlpha = 0.4;
+                    
+                    for (let i = 1; i < player.trail.length; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(player.trail[i - 1].x, player.trail[i - 1].y);
+                        ctx.lineTo(player.trail[i].x, player.trail[i].y);
+                        ctx.stroke();
+                    }
+                    ctx.globalAlpha = 1;
+                }
+                
+                // Glow
+                ctx.shadowColor = player.color;
+                ctx.shadowBlur = 20;
+                
+                // Player body
+                ctx.fillStyle = player.color;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, PLAYER_RADIUS, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Inner light
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(player.x - 3, player.y - 3, PLAYER_RADIUS * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
+                
+                // Name tag
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(player.name, player.x, player.y - PLAYER_RADIUS - 8);
+                
+                // Score indicator
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.font = '10px sans-serif';
+                ctx.fillText(player.score, player.x, player.y + PLAYER_RADIUS + 16);
+            });
+            
+            ctx.restore();
+            
+            // Draw minimap
+            drawMinimap();
+        }
+
+        function drawMinimap() {
+            const mapSize = isMobile ? 100 : 150;
+            const mapX = canvas.width - mapSize - (isMobile ? 10 : 20);
+            const mapY = canvas.height - mapSize - (isMobile ? 10 : 20);
+            const scale = mapSize / Math.max(worldSize.width, worldSize.height);
+            
+            // Background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.strokeStyle = 'rgba(100, 100, 200, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.fillRect(mapX, mapY, mapSize, mapSize);
+            ctx.strokeRect(mapX, mapY, mapSize, mapSize);
+            
+            // Stars
+            ctx.fillStyle = '#ffd700';
+            stars.forEach(star => {
+                ctx.fillRect(mapX + star.x * scale, mapY + star.y * scale, 2, 2);
+            });
+            
+            // Black holes
+            ctx.fillStyle = '#8000ff';
+            blackHoles.forEach(bh => {
+                ctx.beginPath();
+                ctx.arc(mapX + bh.x * scale, mapY + bh.y * scale, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Players
+            players.forEach(player => {
+                if (!player.alive) return;
+                ctx.fillStyle = player.id === localPlayer.id ? '#fff' : player.color;
+                ctx.beginPath();
+                ctx.arc(mapX + player.x * scale, mapY + player.y * scale, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Viewport rectangle
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(
+                mapX + camera.x * scale,
+                mapY + camera.y * scale,
+                canvas.width * scale,
+                canvas.height * scale
+            );
+        }
+
+        // ==================== GAME LOOP ====================
+        function gameLoop() {
+            if (gameState !== 'playing') return;
+            
+            const now = performance.now();
+            const dt = now - lastTime;
+            lastTime = now;
+            
+            update(dt);
+            render();
+            
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize
+        showMenu('main');
+    </script>
+</body>
+</html>'''
+
+with open('/mnt/agents/output/void_game.html', 'w', encoding='utf-8') as f:
+    f.write(html_content)
+
+print("Updated with mobile joystick!")
+print(f"File size: {len(html_content):,} characters")
